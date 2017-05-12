@@ -14,6 +14,8 @@ namespace ConsoleApplication2
             DirectoryInfo dirInfo = new DirectoryInfo(dir);
             FileInfo[] files = dirInfo.GetFiles();
 
+
+
             foreach (FileInfo file in files)
 
                 Console.WriteLine(file.FullName /*+ file.Name.PadLeft(fieldSize)*/);
