@@ -11,6 +11,7 @@ using Android.Views;
 using Android.Widget;
 using Android.Graphics;
 using Android.Locations;
+using Android.Content.PM;
 
 namespace GeoCod
 {
@@ -23,11 +24,12 @@ namespace GeoCod
         TextView message;
         ImageView imageview;
         Button buttonSend;
-        Bitmap img;
+        //Bitmap img;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+            this.RequestedOrientation = ScreenOrientation.Portrait;
 
 
 
@@ -37,11 +39,19 @@ namespace GeoCod
             address = FindViewById<TextView>(Resource.Id.textAddress);
             zkh = FindViewById<TextView>(Resource.Id.textZKH);
             message = FindViewById<TextView>(Resource.Id.textMessage);
+            imageview = FindViewById<ImageView>(Resource.Id.image);
+            buttonSend = FindViewById<Button>(Resource.Id.buttonSend);
 
-            message.Text = Resource.variable.address;
-
+            message.Text = Variable.address;
+            imageview.SetImageBitmap(Variable.img);
+            buttonSend.Click += OnButtonClicked;
 
             //imageview.SetImageBitmap(img);
+        }
+
+        private void OnButtonClicked(object sender, EventArgs e)
+        {
+            Toast.MakeText(this, "Типа отправил!", ToastLength.Long).Show();
         }
     }
 }

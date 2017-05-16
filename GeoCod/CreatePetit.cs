@@ -5,152 +5,168 @@ using System.Text;
 
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.Locations;
 using Android.Util;
+using Android.Provider;
+using System.Net.Http;
+using System.Net;
+using Newtonsoft.Json;
+using Java.IO;
+using Android.Graphics;
+using Environment = Android.OS.Environment;
+
+//using Uri = Android.Net.Uri;
+
+
 
 namespace GeoCod
 {
-    [Activity(Label = "CreatePetition", Theme = "@android:style/Theme.NoTitleBar")]
-    public class CreatePetit : Activity, ILocationListener
+    public static class App
     {
-        LocationManager locMgr;
-        string tag = "CreatePetition";
-        Button button;
-        TextView latitudeY;
-        TextView longitudeX;
-        TextView provider;
-        TextView address;
+        public static File _file;
+        public static File _dir;
+        public static Bitmap bitmap;
+    }
+
+    [Activity(Label = "CreatePetition", Theme = "@android:style/Theme.NoTitleBar")]
+    public class CreatePetit : Activity
+    {
+        //Button button;
+        EditText textAddress;
+        EditText message;
+        ImageButton buttonCam;
+
+        ImageView imageview1;
         Button button1;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-
-            ////////////
-            locMgr = GetSystemService(Context.LocationService) as LocationManager;
-            if (locMgr.AllProviders.Contains(LocationManager.NetworkProvider)
-                    && locMgr.IsProviderEnabled(LocationManager.NetworkProvider))
-            {
-                locMgr.RequestLocationUpdates(LocationManager.NetworkProvider, 2000, 1, this);
-            }
-            else
-            {
-                Toast.MakeText(this, "The Network Provider does not exist or is not enabled!", ToastLength.Long).Show();
-            }
-            //////////
+            this.RequestedOrientation = ScreenOrientation.Portrait;
 
             // Create your application here
             SetContentView(Resource.Layout.CreatePetition);
 
-            latitudeY = FindViewById<TextView>(Resource.Id.textY);
-            longitudeX = FindViewById<TextView>(Resource.Id.textX);
-            //address = FindViewById<TextView>(Resource.Id.textAddress);
             button1 = FindViewById<Button>(Resource.Id.buttonSend);
+            textAddress = FindViewById<EditText>(Resource.Id.editText1);
+            message = FindViewById<EditText>(Resource.Id.text);
+
+            textAddress.Text = Variable.address;
+
+            button1.Clickable = false;
+
+            if (IsThereAnAppToTakePictures())
+            {
+                CreateDirectoryForPictures();
+
+                buttonCam = FindViewById<ImageButton>(Resource.Id.imageButton1);
+                imageview1 = FindViewById<ImageView>(Resource.Id.imageView1);
+                buttonCam.Click += OnButtonCamClicked;
+            }
 
             button1.Click += OnButtonClicked;
 
-            latitudeY.Text = "    Y:  " + Resource.variable.Y;
-            longitudeX.Text = "    X: " + Resource.variable.X;
-
         }
 
-        /*void OnButtonClicked(object sender, EventArgs e)
+      
+        void OnButtonCamClicked(object sender, EventArgs e)
         {
-            var intent = new Intent(this, typeof(Petite));
-            StartActivity(intent);
-        }*/
+            Intent intent = new Intent(MediaStore.ActionImageCapture);
+
+            App._file = new File(App._dir, String.Format("myPhoto_{0}.jpg", Guid.NewGuid()));
+
+            intent.PutExtra(MediaStore.ExtraOutput, Android.Net.Uri.FromFile(App._file));
+
+            StartActivityForResult(intent, 0);
+
+        }
     
 
-     async void OnButtonClicked(object sender, System.EventArgs e)
-         {         
-            var geo = new Geocoder(this);
-             var addresses = await geo.GetFromLocationAsync(Resource.variable.X, Resource.variable.Y, 1);
+     async  void OnButtonClicked(object sender, System.EventArgs e)
+         {           
+           // if(Variable.img != null)
+           // {
+                Variable.address = textAddress.Text;
+                Variable.message = message.Text;
+                string coord = Variable.X.ToString() + "," + Variable.Y.ToString();
 
-             // var addressText = FindViewById<TextView>(Resource.Id.addressText);
-             if (addresses.Any())
-             {
-                 addresses.ToList().ForEach(addr => Resource.variable.address = addr + System.Environment.NewLine + System.Environment.NewLine);
-             }
-             else
-             {
-                 Resource.variable.address = "Could not find any addresses.";
-             }
 
-            var intent = new Intent(this, typeof(Petite));
-            StartActivity(intent);
+                //  System.IO.Stream stream = new System.IO.MemoryStream();
+                // stream.Write(ImageToByte(Variable.img));
+              /*  System.IO.MemoryStream stream = new System.IO.MemoryStream();
+                Variable.img.Compress(Bitmap.CompressFormat.Png, 0, stream);
+                 byte[] bitmapData = stream.ToArray();
+                
+                
 
-        }
+               HttpContent content = new StreamContent(stream);
 
-        protected override void OnStart()
-        {
-            base.OnStart();
-            Log.Debug(tag, "OnStart called");
-        }
+                HttpClient client = new HttpClient();
 
-        // OnResume gets called every time the activity starts, so we'll put our RequestLocationUpdates
-        // code here, so that 
-        protected override void OnResume()
-        {
-            base.OnResume();
-            Log.Debug(tag, "OnResume called");
+                HttpRequestMessage req = new HttpRequestMessage();
+                req.Headers.Add("Authorization", "2pp72KtHx13pOEf3BD5B");
+                req.RequestUri = new Uri("https://api.imageban.ru/v1");
+                req.Method = HttpMethod.Post;
+                req.Content = content;
 
-            // initialize location manager
-            locMgr = GetSystemService(Context.LocationService) as LocationManager;
-            if (locMgr.AllProviders.Contains(LocationManager.NetworkProvider)
-                     && locMgr.IsProviderEnabled(LocationManager.NetworkProvider))
-            {
-                locMgr.RequestLocationUpdates(LocationManager.NetworkProvider, 1, 1, this);
-            }
+                // HttpResponseMessage response = await client.PostAsync("http://fp.96.lt/soy4er/uploadimg.php/?data=", content);
+                HttpResponseMessage response = await client.SendAsync(req);
+                Toast.MakeText(this, response.Content.ToString(), ToastLength.Long).Show();*/
+                Toast.MakeText(this, coord, ToastLength.Long).Show();
+         /*   }
+           // Toast.MakeText(this, Variable.address, ToastLength.Long).Show();
             else
+                Toast.MakeText(this, "Загрузите фотографию", ToastLength.Long).Show();*/
+
+        }
+
+
+        protected override void OnActivityResult(int requestCode, Android.App.Result resultCode, Intent data)
+        {
+            base.OnActivityResult(requestCode, resultCode, data);
+
+            Intent mediaScanIntent = new Intent(Intent.ActionMediaScannerScanFile);
+            Android.Net.Uri contentUri = Android.Net.Uri.FromFile(App._file);
+            mediaScanIntent.SetData(contentUri);
+            SendBroadcast(mediaScanIntent);
+
+            int height = Resources.DisplayMetrics.HeightPixels;
+            int width = imageview1.Height;
+            App.bitmap = App._file.Path.LoadAndResizeBitmap(width, height);
+            if (App.bitmap != null)
             {
-                Toast.MakeText(this, "The Network Provider does not exist or is not enabled!", ToastLength.Long).Show();
+                Variable.img = App.bitmap;
+                imageview1.SetImageBitmap (App.bitmap);
+                App.bitmap = null;
+            }
+
+            // Dispose of the Java side bitmap.
+            GC.Collect();
+        }
+        private void CreateDirectoryForPictures()
+        {
+            App._dir = new File(
+                Environment.GetExternalStoragePublicDirectory(
+                    Environment.DirectoryPictures), "CameraAppDemo");
+            if (!App._dir.Exists())
+            {
+                App._dir.Mkdirs();
             }
         }
 
-        protected override void OnPause()
+        private bool IsThereAnAppToTakePictures()
         {
-            base.OnPause();
-
-            // stop sending location updates when the application goes into the background
-            // to learn about updating location in the background, refer to the Backgrounding guide
-            // http://docs.xamarin.com/guides/cross-platform/application_fundamentals/backgrounding/
-
-
-            // RemoveUpdates takes a pending intent - here, we pass the current Activity
-            locMgr.RemoveUpdates(this);
-            Log.Debug(tag, "Location updates paused because application is entering the background");
+            Intent intent = new Intent(MediaStore.ActionImageCapture);
+            IList<ResolveInfo> availableActivities =
+                PackageManager.QueryIntentActivities(intent, PackageInfoFlags.MatchDefaultOnly);
+            return availableActivities != null && availableActivities.Count > 0;
         }
 
-        protected override void OnStop()
-        {
-            base.OnStop();
-            Log.Debug(tag, "OnStop called");
-        }
-
-        public void OnLocationChanged(Android.Locations.Location location)
-        {
-            Log.Debug(tag, "Location changed");
-            Resource.variable.X = location.Latitude;
-            Resource.variable.Y = location.Longitude;
-            latitudeY.Text = "    Y:  " + Resource.variable.Y;
-            longitudeX.Text = "    X: " + Resource.variable.X;
-            //provider.Text = "Provider: " + location.Provider.ToString();
-        }
-        public void OnProviderDisabled(string provider)
-        {
-            Log.Debug(tag, provider + " disabled by user");
-        }
-        public void OnProviderEnabled(string provider)
-        {
-            Log.Debug(tag, provider + " enabled by user");
-        }
-        public void OnStatusChanged(string provider, Availability status, Bundle extras)
-        {
-            Log.Debug(tag, provider + " availability has changed to " + status.ToString());
-        }
+      
     }
 }

@@ -29,7 +29,7 @@
         android:layout_height="269.5dp"
         android:id="@+id/image" />
     <Button
-        android:text="Button"
+        android:text="Подтвердить отправку"
         android:layout_width="match_parent"
         android:layout_height="68.0dp"
         android:id="@+id/buttonSend" />
